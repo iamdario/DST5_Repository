@@ -1,3 +1,15 @@
+### CubeIDE Specific Gitignore ###
+#settings
+.settings/
+
+#Debug
+Debug/
+debug/
+Release/
+release
+
+### C Standard Gitignore ##
+
 # Prerequisites
 *.d
 
