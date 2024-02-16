@@ -107,9 +107,9 @@ int main(void)
   {
     /* USER CODE END WHILE */
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET); // RED LED ON
-	HAL_Delay(500); // Delay in milliseconds
+	HAL_Delay(1000); // Delay in milliseconds
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); //  RED LED OFF
-	HAL_Delay(500); // Delay in milliseconds
+	HAL_Delay(1000); // Delay in milliseconds
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
