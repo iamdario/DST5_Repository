@@ -231,7 +231,6 @@ static void Ble_Tl_Init(void);
 static void Ble_Hci_Gap_Gatt_Init(void);
 static const uint8_t* BleGetBdAddress(void);
 static void Scan_Request(void);
-static void Connect_Request(void);
 static void Switch_OFF_GPIO(void);
 
 /* USER CODE BEGIN PFP */
@@ -329,7 +328,6 @@ void APP_BLE_Init(void)
    * From here, all initialization are BLE application specific
    */
   UTIL_SEQ_RegTask(1<<CFG_TASK_START_SCAN_ID, UTIL_SEQ_RFU, Scan_Request);
-  UTIL_SEQ_RegTask(1<<CFG_TASK_CONN_DEV_1_ID, UTIL_SEQ_RFU, Connect_Request);
 
   /**
    * Initialization of the BLE App Context
@@ -1005,51 +1003,6 @@ static void Scan_Request(void)
   /* USER CODE BEGIN Scan_Request_2 */
 
   /* USER CODE END Scan_Request_2 */
-  return;
-}
-
-static void Connect_Request(void)
-{
-  /* USER CODE BEGIN Connect_Request_1 */
-
-  /* USER CODE END Connect_Request_1 */
-  tBleStatus result;
-
-  APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO SERVER **  \r\n\r");
-
-  if (BleApplicationContext.Device_Connection_Status != APP_BLE_CONNECTED_CLIENT)
-  {
-    result = aci_gap_create_connection(SCAN_P,
-                                       SCAN_L,
-                                       SERVER_REMOTE_ADDR_TYPE, SERVER_REMOTE_BDADDR,
-                                       CFG_BLE_ADDRESS_TYPE,
-                                       CONN_P1,
-                                       CONN_P2,
-                                       0,
-                                       SUPERV_TIMEOUT,
-                                       CONN_L1,
-                                       CONN_L2);
-
-    if (result == BLE_STATUS_SUCCESS)
-    {
-      /* USER CODE BEGIN BLE_CONNECT_SUCCESS */
-
-      /* USER CODE END BLE_CONNECT_SUCCESS */
-      BleApplicationContext.Device_Connection_Status = APP_BLE_LP_CONNECTING;
-
-    }
-    else
-    {
-      /* USER CODE BEGIN BLE_CONNECT_FAILED */
-      BSP_LED_On(LED_RED);
-      /* USER CODE END BLE_CONNECT_FAILED */
-      BleApplicationContext.Device_Connection_Status = APP_BLE_IDLE;
-
-    }
-  }
-  /* USER CODE BEGIN Connect_Request_2 */
-
-  /* USER CODE END Connect_Request_2 */
   return;
 }
 
