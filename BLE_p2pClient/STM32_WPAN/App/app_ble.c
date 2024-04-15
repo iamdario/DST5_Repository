@@ -221,7 +221,7 @@ APP_BLE_p2p_Conn_Update_req_t APP_BLE_p2p_Conn_Update_req;
 
 /* USER CODE BEGIN PV */
 
-int8_t rLedOn = 0;
+int8_t rLedOn = 0; // Keeps track of whether the BLUE LED is on or off
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -292,7 +292,7 @@ void APP_BLE_Init(void)
   /**
    * Do not allow standby in the application
    */
-  UTIL_LPM_SetOffMode(1 << CFG_LPM_APP_BLE, UTIL_LPM_DISABLE);
+  UTIL_LPM_SetOffMode(1 << CFG_LPM_APP_BLE, UTIL_LPM_DISABLE); // Cannot enable?
 
   /**
    * Register the hci transport layer to handle BLE User Asynchronous Events
@@ -350,10 +350,11 @@ void APP_BLE_Init(void)
   /**
    * Initialize P2P Client Application
    */
-  //P2PC_APP_Init();
+  //P2PC_APP_Init(); // Commented out as we do not want to run the actual P2PC application
 
   /* USER CODE BEGIN APP_BLE_Init_3 */
 
+  // Indicate that program should start scanning
   UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_0); // Start Scanning
 
   /* USER CODE END APP_BLE_Init_3 */
@@ -430,7 +431,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                   UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
                 }
 
-            	// This is where we go into once it stops scanning
+            	// Enters here once program stops scanning (roughly every 5 seconds)
                 UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_0); // Restart Scanning
               }
             }
