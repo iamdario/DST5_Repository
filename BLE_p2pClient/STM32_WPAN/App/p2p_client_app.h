@@ -1,3 +1,5 @@
+#if 0
+
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
@@ -78,3 +80,5 @@ void P2PC_APP_SW1_Button_Action(void);
 #endif
 
 #endif /*P2P_APPLICATION_H */
+
+#endif

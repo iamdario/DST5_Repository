@@ -1,3 +1,5 @@
+#if 0
+
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
@@ -726,3 +728,5 @@ void Update_Service()
   return;
 }
 /* USER CODE END LF */
+
+#endif
