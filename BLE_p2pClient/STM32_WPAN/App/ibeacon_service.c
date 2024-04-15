@@ -69,13 +69,13 @@ typedef struct
 static tBleStatus IBeacon_Init(IBeacon_InitTypeDef *IBeacon_Init)
 {
 /* USER CODE BEGIN IBeacon_Init_1 */
-	IBeacon_Init->MajorID[0] = 0xFF;
-	IBeacon_Init->MajorID[1] = 0xFF;
-	IBeacon_Init->MinorID[0] = 0x00;
-	IBeacon_Init->MinorID[1] = 0x01;
-
-	IBeacon_Init->UuID[14] = 0x00;
-	IBeacon_Init->UuID[15] = 0xFF;
+//	IBeacon_Init->MajorID[0] = 0xFF;
+//	IBeacon_Init->MajorID[1] = 0xFF;
+//	IBeacon_Init->MinorID[0] = 0x00;
+//	IBeacon_Init->MinorID[1] = 0x01;
+//
+//	IBeacon_Init->UuID[14] = 0x00;
+//	IBeacon_Init->UuID[15] = 0xFF;
 
 /* USER CODE END IBeacon_Init_1 */
   tBleStatus ret = BLE_STATUS_SUCCESS;

@@ -38,6 +38,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "ibeacon_service.h"
+#include "ibeacon.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -174,6 +176,10 @@ typedef struct
 #define BD_ADDR_SIZE_LOCAL    6
 
 /* USER CODE BEGIN PD */
+#define BOOT_MODE_AND_SECTOR                                            0x010601
+#define APP_SECTORS                                                            7
+#define DATA_SECTOR                                                            6
+
 #if OOB_DEMO != 0 
 #define LED_ON_TIMEOUT            (0.005*1000*1000/CFG_TS_TICK_VAL) /**< 5ms */
 #endif 
@@ -221,7 +227,12 @@ APP_BLE_p2p_Conn_Update_req_t APP_BLE_p2p_Conn_Update_req;
 
 /* USER CODE BEGIN PV */
 
-int8_t rLedOn = 0; // Keeps track of whether the BLUE LED is on or off
+int8_t BlueLedOn = 0; // Keeps track of whether the BLUE LED is on or off
+int8_t RedLedOn = 0;
+int8_t ScanCounter = 0;
+
+static uint8_t sector_type;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -234,7 +245,7 @@ static void Scan_Request(void);
 static void Switch_OFF_GPIO(void);
 
 /* USER CODE BEGIN PFP */
-
+static void Beacon_Update(void);
 /* USER CODE END PFP */
 
 /* External variables --------------------------------------------------------*/
@@ -329,6 +340,9 @@ void APP_BLE_Init(void)
    */
   UTIL_SEQ_RegTask(1<<CFG_TASK_START_SCAN_ID, UTIL_SEQ_RFU, Scan_Request);
 
+  //UTIL_SEQ_RegTask(1<<CFG_TASK_BEACON_UPDATE_REQ_ID, UTIL_SEQ_RFU, Beacon_Update);
+  //IBeacon_Process();
+
   /**
    * Initialization of the BLE App Context
    */
@@ -371,7 +385,16 @@ void APP_BLE_Init(void)
 #endif
   /* USER CODE BEGIN APP_BLE_Init_2 */
 
+//  // Register Beacon Task
+//  UTIL_SEQ_RegTask(1<<CFG_TASK_BEACON_UPDATE_REQ_ID, UTIL_SEQ_RFU, Beacon_Update);
+//
+//  UTIL_SEQ_SetTask(1 << CFG_TASK_BEACON_UPDATE_REQ_ID, CFG_SCH_PRIO_0); // Start Beaconing
+//
+//  // Make Device Discoverable
+//  IBeacon_Process();
+
   /* USER CODE END APP_BLE_Init_2 */
+
   return;
 }
 
@@ -431,8 +454,17 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                   UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
                 }
 
+                if (ScanCounter == 2)
+                {
+                	BSP_LED_On(LED_RED);
+                	RedLedOn = 1;
+                	ScanCounter = 0;
+                }
+
             	// Enters here once program stops scanning (roughly every 5 seconds)
                 UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_0); // Restart Scanning
+
+                ++ScanCounter;
               }
             }
             break;
@@ -601,15 +633,15 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             	  int8_t RSSI = (int8_t)*(uint8_t*) (adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data);
             	  if (RSSI>=-80)
             	  {
-					  if (rLedOn == 0)
+					  if (BlueLedOn == 0)
 					  {
 						  BSP_LED_On(LED_BLUE);
-						  rLedOn = 1;
+						  BlueLedOn = 1;
 					  }
 					  else
 					  {
 						  BSP_LED_Off(LED_BLUE);
-						  rLedOn = 0;
+						  BlueLedOn = 0;
 					  }
             	  }
               }
@@ -721,6 +753,16 @@ APP_BLE_ConnStatus_t APP_BLE_Get_Client_Connection_Status(uint16_t Connection_Ha
 /* USER CODE BEGIN FD */
 void APP_BLE_Key_Button1_Action(void)
 {
+	if (RedLedOn == 0)
+	{
+		BSP_LED_On(LED_RED);
+		RedLedOn = 1;
+	}
+	else
+	{
+		BSP_LED_Off(LED_RED);
+		RedLedOn = 0;
+	}
 # if 0
 #if OOB_DEMO == 0 
   P2PC_APP_SW1_Button_Action();
@@ -857,7 +899,6 @@ static void Ble_Hci_Gap_Gatt_Init(void)
    * Initialize GAP interface
    */
   role = 0;
-
 #if (BLE_CFG_PERIPHERAL == 1)
   role |= GAP_PERIPHERAL_ROLE;
 #endif /* BLE_CFG_PERIPHERAL == 1 */
@@ -868,11 +909,13 @@ static void Ble_Hci_Gap_Gatt_Init(void)
 
 /* USER CODE BEGIN Role_Mngt*/
 
+  role = 0;
+  role |= GAP_CENTRAL_ROLE;
 /* USER CODE END Role_Mngt */
 
   if (role > 0)
   {
-    const char *name = "P2P_C";
+    const char *name = "P2PC"; // Noticed slight decrease in performance when changed to RELAY
 
     ret = aci_gap_init(role,
                        CFG_PRIVACY,
@@ -914,6 +957,7 @@ static void Ble_Hci_Gap_Gatt_Init(void)
   {
     BLE_DBG_SVCCTL_MSG("  Success: aci_gatt_update_char_value - Appearance\n");
   }
+
 
   /**
    * Initialize IO capability
@@ -973,6 +1017,8 @@ static void Ble_Hci_Gap_Gatt_Init(void)
     }
   }
   APP_DBG_MSG("==>> End Ble_Hci_Gap_Gatt_Init function\n\r");
+
+
 }
 
 static void Scan_Request(void)
@@ -1065,6 +1111,41 @@ const uint8_t* BleGetBdAddress(void)
 }
 
 /* USER CODE BEGIN FD_LOCAL_FUNCTIONS */
+
+static void Beacon_Update(void)
+{
+  FLASH_EraseInitTypeDef erase;
+  uint32_t pageError = 0;
+
+  if (sector_type != 0)
+  {
+    erase.TypeErase = FLASH_TYPEERASE_PAGES;
+    erase.Page      = sector_type;
+    if (sector_type == APP_SECTORS)
+    {
+      erase.NbPages = 2;  /* 2 sectors for beacon application */
+    }
+    else
+    {
+      erase.NbPages = 1; /* 1 sector for beacon user data */
+    }
+
+    HAL_FLASH_Unlock();
+    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_WRPERR | FLASH_FLAG_OPTVERR);
+
+    HAL_FLASHEx_Erase(&erase, &pageError);
+
+    HAL_FLASH_Lock();
+  }
+
+  *(uint32_t*) SRAM1_BASE = BOOT_MODE_AND_SECTOR;
+  /**
+   * Boot Mode:    1 (OTA)
+   * Sector Index: 6
+   * Nb Sectors  : 1
+   */
+  NVIC_SystemReset();
+}
 
 /* USER CODE END FD_LOCAL_FUNCTIONS */
 
