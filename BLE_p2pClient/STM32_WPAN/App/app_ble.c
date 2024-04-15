@@ -34,7 +34,7 @@
 #include "stm32_lpm.h"
 #include "otp.h"
 
-#include "p2p_client_app.h"
+//#include "p2p_client_app.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -211,7 +211,7 @@ static const uint8_t a_BLE_CfgErValue[16] = CFG_BLE_ER;
 tBDAddr SERVER_REMOTE_BDADDR;
 uint8_t SERVER_REMOTE_ADDR_TYPE;
 
-P2PC_APP_ConnHandle_Not_evt_t handleNotification;
+//P2PC_APP_ConnHandle_Not_evt_t handleNotification;
 
 static BleApplicationContext_t BleApplicationContext;
 
@@ -399,7 +399,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
     /* USER CODE END evt */
     case HCI_VENDOR_SPECIFIC_DEBUG_EVT_CODE:
       {
-        handleNotification.P2P_Evt_Opcode = PEER_DISCON_HANDLE_EVT;
+        //handleNotification.P2P_Evt_Opcode = PEER_DISCON_HANDLE_EVT;
         blecore_evt = (evt_blecore_aci*) event_pckt->data;
         /* USER CODE BEGIN EVT_VENDOR */
 
@@ -527,9 +527,9 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
           BleApplicationContext.BleApplicationContext_legacy.connectionHandle = 0;
           BleApplicationContext.Device_Connection_Status = APP_BLE_IDLE;
           APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT WITH SERVER \n\r");
-          handleNotification.P2P_Evt_Opcode = PEER_DISCON_HANDLE_EVT;
-          handleNotification.ConnectionHandle = BleApplicationContext.BleApplicationContext_legacy.connectionHandle;
-          P2PC_APP_Notification(&handleNotification);
+          //handleNotification.P2P_Evt_Opcode = PEER_DISCON_HANDLE_EVT;
+          //handleNotification.ConnectionHandle = BleApplicationContext.BleApplicationContext_legacy.connectionHandle;
+          //P2PC_APP_Notification(&handleNotification);
         }
       }
       break; /* HCI_DISCONNECTION_COMPLETE_EVT_CODE */
@@ -560,9 +560,9 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
             /* CONNECTION WITH CLIENT */
             APP_DBG_MSG("\r\n\r**  CONNECTION COMPLETE EVENT WITH SERVER \n\r");
-            handleNotification.P2P_Evt_Opcode = PEER_CONN_HANDLE_EVT;
-            handleNotification.ConnectionHandle = BleApplicationContext.BleApplicationContext_legacy.connectionHandle;
-            P2PC_APP_Notification(&handleNotification);
+            //handleNotification.P2P_Evt_Opcode = PEER_CONN_HANDLE_EVT;
+            //handleNotification.ConnectionHandle = BleApplicationContext.BleApplicationContext_legacy.connectionHandle;
+            //P2PC_APP_Notification(&handleNotification);
 
             result = aci_gatt_disc_all_primary_services(BleApplicationContext.BleApplicationContext_legacy.connectionHandle);
             if (result == BLE_STATUS_SUCCESS)
@@ -721,6 +721,7 @@ APP_BLE_ConnStatus_t APP_BLE_Get_Client_Connection_Status(uint16_t Connection_Ha
 /* USER CODE BEGIN FD */
 void APP_BLE_Key_Button1_Action(void)
 {
+# if 0
 #if OOB_DEMO == 0 
   P2PC_APP_SW1_Button_Action();
 #else 
@@ -733,6 +734,7 @@ void APP_BLE_Key_Button1_Action(void)
     P2PC_APP_SW1_Button_Action();
   }   
 #endif 
+#endif
 }
 
 void APP_BLE_Key_Button2_Action(void)
