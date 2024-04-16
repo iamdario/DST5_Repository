@@ -45,7 +45,7 @@ typedef struct
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+uint8_t MajorLSB = 0;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -76,6 +76,9 @@ static tBleStatus IBeacon_Init(IBeacon_InitTypeDef *IBeacon_Init)
 //
 //	IBeacon_Init->UuID[14] = 0x00;
 //	IBeacon_Init->UuID[15] = 0xFF;
+
+	//IBeacon_Init->MajorID[0] = 0;
+	//IBeacon_Init->MajorID[1] = MajorLSB;
 
 /* USER CODE END IBeacon_Init_1 */
   tBleStatus ret = BLE_STATUS_SUCCESS;
@@ -127,7 +130,8 @@ static tBleStatus IBeacon_Init(IBeacon_InitTypeDef *IBeacon_Init)
     IBeacon_Init->UuID[14],
     IBeacon_Init->UuID[15],
     IBeacon_Init->MajorID[0],                                                /*< 2-byte Major. */
-    IBeacon_Init->MajorID[1],
+    //IBeacon_Init->MajorID[1],
+	MajorLSB,
     IBeacon_Init->MinorID[0],                                                /*< 2-byte Minor. */
     IBeacon_Init->MinorID[1],
     IBeacon_Init->CalibratedTxPower,                                         /*< Ranging data. */
@@ -206,5 +210,61 @@ void IBeacon_Process(void)
 /* USER CODE END IBeacon_Process_2 */
 }
 /* USER CODE BEGIN FD */
+
+void UpdateBeaconVal(uint8_t new_value)
+{
+	MajorLSB = new_value;
+
+	uint8_t service_data[] =
+	  {
+	    26,                                                                      /*< Length. */
+	    AD_TYPE_MANUFACTURER_SPECIFIC_DATA,                                      /*< Manufacturer Specific Data data type value. */
+	    0x4C, 0x00, 0x02, 0x15,                                                  /*< 32-bit Manufacturer Data. */
+	    0,                                                   /*< 16-byte Proximity UUID. */
+	    1,
+	    2,
+	    3,
+	    4,
+	    5,
+	    6,
+	    7,
+	    8,
+	    9,
+	    10,
+	    11,
+	    12,
+	    13,
+	    14,
+	    15,
+	    0,                                                /*< 2-byte Major. */
+		MajorLSB,
+	    0,                                                /*< 2-byte Minor. */
+	    1,
+	    -63,                                         /*< Ranging data. */
+	  };
+
+	  uint8_t flags[] =
+	  {
+	    2,                                                                      /*< Length. */
+	    AD_TYPE_FLAGS,                                                          /*< Flags data type value. */
+	    (FLAG_BIT_LE_GENERAL_DISCOVERABLE_MODE | FLAG_BIT_BR_EDR_NOT_SUPPORTED) /*< BLE general discoverable, without BR/EDR support. */
+	  };
+
+	  /* Update the service data. */
+	  int ret = aci_gap_update_adv_data(sizeof(service_data), service_data);
+
+	  if (ret != BLE_STATUS_SUCCESS)
+	  {
+	    return ret;
+	  }
+
+	  /* Update the adverstising flags. */
+	  ret = aci_gap_update_adv_data(sizeof(flags), flags);
+
+	  if (ret != BLE_STATUS_SUCCESS)
+	  {
+	    return ret;
+	  }
+}
 
 /* USER CODE END FD */

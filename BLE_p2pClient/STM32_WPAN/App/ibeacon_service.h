@@ -51,6 +51,8 @@ extern "C"
 /* Exported functions prototypes ---------------------------------------------*/
 /* USER CODE BEGIN EFP */
 void IBeacon_Process(void);
+
+void UpdateBeaconVal(uint8_t new_value);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

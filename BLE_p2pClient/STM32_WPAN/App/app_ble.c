@@ -184,7 +184,7 @@ typedef struct
 #define LED_ON_TIMEOUT            (0.005*1000*1000/CFG_TS_TICK_VAL) /**< 5ms */
 #endif 
 
-#define TRANSMIT_AND_RECEIVE 1
+#define TRANSMIT_AND_RECEIVE 0
 /* USER CODE END PD */
 
 /* Private macros ------------------------------------------------------------*/
@@ -232,6 +232,7 @@ APP_BLE_p2p_Conn_Update_req_t APP_BLE_p2p_Conn_Update_req;
 int8_t BlueLedOn = 0; // Keeps track of whether the BLUE LED is on or off
 int8_t RedLedOn = 0;
 int8_t ScanCounter = 0;
+uint8_t BeaconsReceived = 0;
 
 uint8_t gRole = 0;
 
@@ -462,6 +463,18 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 {
                   UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
                 }
+
+                // Update Beacon Value & Reset Counter
+#if !TRANSMIT_AND_RECEIVE
+                if (ScanCounter == 1)
+                {
+#endif
+                UpdateBeaconVal(BeaconsReceived);
+                BeaconsReceived = 0;
+#if !TRANSMIT_AND_RECEIVE
+                }
+#endif
+
 #if !TRANSMIT_AND_RECEIVE
                 if (ScanCounter == 1)
                 {
@@ -655,8 +668,11 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
               if (event_type == ADV_NONCONN_IND)
               {
             	  int8_t RSSI = (int8_t)*(uint8_t*) (adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data);
+
+            	  // Filter based on received power
             	  if (RSSI>=-80)
             	  {
+            		  // Swap LED State
 					  if (BlueLedOn == 0)
 					  {
 						  BSP_LED_On(LED_BLUE);
@@ -667,6 +683,9 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 						  BSP_LED_Off(LED_BLUE);
 						  BlueLedOn = 0;
 					  }
+
+					  // Increment to indicate we have received another beacon
+					  ++BeaconsReceived;
             	  }
               }
 
