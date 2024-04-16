@@ -796,6 +796,52 @@ void APP_BLE_Key_Button1_Action(void)
 
 void APP_BLE_Key_Button2_Action(void)
 {
+	if (RedLedOn == 1)
+	{
+		BSP_LED_Off(LED_RED);
+		RedLedOn = 0;
+		ScanCounter = 0;
+
+		tBleStatus ret = BLE_STATUS_INVALID_PARAMS;
+
+		aci_gap_terminate(0x00, 0x13);
+
+		gRole = 0;
+		gRole |= GAP_CENTRAL_ROLE;
+
+		Ble_Hci_Gap_Gatt_Init();
+		SVCCTL_Init();
+
+		UTIL_SEQ_RegTask(1<<CFG_TASK_START_SCAN_ID, UTIL_SEQ_RFU, Scan_Request);
+
+		/**
+		* Initialization of the BLE App Context
+		*/
+		BleApplicationContext.Device_Connection_Status = APP_BLE_IDLE;
+
+		/*Radio mask Activity*/
+		#if (OOB_DEMO != 0)
+		ret = aci_hal_set_radio_activity_mask(0x0020);
+		if (ret != BLE_STATUS_SUCCESS)
+		{
+			APP_DBG_MSG("  Fail   : aci_hal_set_radio_activity_mask command, result: 0x%x \n\r", ret);
+		}
+		else
+		{
+			APP_DBG_MSG("  Success: aci_hal_set_radio_activity_mask command\n\r");
+		}
+		APP_DBG_MSG("\n");
+		#endif
+		/**
+		* Initialize P2P Client Application
+		*/
+		/* USER CODE BEGIN APP_BLE_Init_3 */
+
+		// Indicate that program should start scanning
+		UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_0); // Start Scanning
+
+		/* USER CODE END APP_BLE_Init_3 */
+	}
 }
 
 void APP_BLE_Key_Button3_Action(void)
@@ -1161,6 +1207,18 @@ static void Beacon_Update(void)
    * Nb Sectors  : 1
    */
   NVIC_SystemReset();
+
+  // Flash LED
+  if (RedLedOn == 0)
+  {
+	  BSP_LED_On(LED_RED);
+	  RedLedOn = 1;
+  }
+  else
+  {
+	  BSP_LED_Off(LED_RED);
+	  RedLedOn = 0;
+  }
 }
 
 /* USER CODE END FD_LOCAL_FUNCTIONS */
