@@ -231,6 +231,8 @@ int8_t BlueLedOn = 0; // Keeps track of whether the BLUE LED is on or off
 int8_t RedLedOn = 0;
 int8_t ScanCounter = 0;
 
+uint8_t gRole = 0;
+
 static uint8_t sector_type;
 
 /* USER CODE END PV */
@@ -328,6 +330,7 @@ void APP_BLE_Init(void)
   /**
    * Initialization of HCI & GATT & GAP layer
    */
+  gRole |= GAP_CENTRAL_ROLE;
   Ble_Hci_Gap_Gatt_Init();
 
   /**
@@ -454,17 +457,29 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                   UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
                 }
 
-                if (ScanCounter == 2)
+                if (ScanCounter == 1)
                 {
                 	BSP_LED_On(LED_RED);
                 	RedLedOn = 1;
                 	ScanCounter = 0;
+
+                	aci_gap_terminate(0x00, 0x13);
+
+                	gRole = 0;
+                	gRole |= GAP_PERIPHERAL_ROLE;
+
+                	Ble_Hci_Gap_Gatt_Init();
+                	SVCCTL_Init();
+
+                	UTIL_SEQ_RegTask(1<<CFG_TASK_BEACON_UPDATE_REQ_ID, UTIL_SEQ_RFU, Beacon_Update);
+                	IBeacon_Process();
                 }
-
-            	// Enters here once program stops scanning (roughly every 5 seconds)
-                UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_0); // Restart Scanning
-
-                ++ScanCounter;
+                else
+                {
+                	// Enters here once program stops scanning (roughly every 5 seconds)
+                	UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_0); // Restart Scanning
+                	++ScanCounter;
+                }
               }
             }
             break;
@@ -909,13 +924,14 @@ static void Ble_Hci_Gap_Gatt_Init(void)
 
 /* USER CODE BEGIN Role_Mngt*/
 
-  role = 0;
-  role |= GAP_CENTRAL_ROLE;
+  //role = 0;
+  //role |= GAP_CENTRAL_ROLE;
+  role = gRole;
 /* USER CODE END Role_Mngt */
 
   if (role > 0)
   {
-    const char *name = "P2PC"; // Noticed slight decrease in performance when changed to RELAY
+    const char *name = "P2P_C"; // Noticed slight decrease in performance when changed to RELAY
 
     ret = aci_gap_init(role,
                        CFG_PRIVACY,
