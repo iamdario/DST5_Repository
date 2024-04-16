@@ -183,6 +183,8 @@ typedef struct
 #if OOB_DEMO != 0 
 #define LED_ON_TIMEOUT            (0.005*1000*1000/CFG_TS_TICK_VAL) /**< 5ms */
 #endif 
+
+#define TRANSMIT_AND_RECEIVE 1
 /* USER CODE END PD */
 
 /* Private macros ------------------------------------------------------------*/
@@ -331,6 +333,9 @@ void APP_BLE_Init(void)
    * Initialization of HCI & GATT & GAP layer
    */
   gRole |= GAP_CENTRAL_ROLE;
+#if TRANSMIT_AND_RECEIVE
+  gRole |= GAP_PERIPHERAL_ROLE;
+#endif
   Ble_Hci_Gap_Gatt_Init();
 
   /**
@@ -342,9 +347,6 @@ void APP_BLE_Init(void)
    * From here, all initialization are BLE application specific
    */
   UTIL_SEQ_RegTask(1<<CFG_TASK_START_SCAN_ID, UTIL_SEQ_RFU, Scan_Request);
-
-  //UTIL_SEQ_RegTask(1<<CFG_TASK_BEACON_UPDATE_REQ_ID, UTIL_SEQ_RFU, Beacon_Update);
-  //IBeacon_Process();
 
   /**
    * Initialization of the BLE App Context
@@ -374,6 +376,10 @@ void APP_BLE_Init(void)
   // Indicate that program should start scanning
   UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_0); // Start Scanning
 
+#if TRANSMIT_AND_RECEIVE
+  UTIL_SEQ_RegTask(1<<CFG_TASK_BEACON_UPDATE_REQ_ID, UTIL_SEQ_RFU, Beacon_Update);
+  IBeacon_Process();
+#endif
   /* USER CODE END APP_BLE_Init_3 */
 
 #if (OOB_DEMO != 0)
@@ -456,7 +462,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 {
                   UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
                 }
-
+#if !TRANSMIT_AND_RECEIVE
                 if (ScanCounter == 1)
                 {
                 	BSP_LED_On(LED_RED);
@@ -476,10 +482,13 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 }
                 else
                 {
+#endif
                 	// Enters here once program stops scanning (roughly every 5 seconds)
                 	UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_0); // Restart Scanning
                 	++ScanCounter;
+#if !TRANSMIT_AND_RECEIVE
                 }
+#endif
               }
             }
             break;
