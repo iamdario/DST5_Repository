@@ -135,6 +135,13 @@ int main(void)
   MX_I2C3_Init();
   MX_RF_Init();
   /* USER CODE BEGIN 2 */
+  char msgstr[64];              /* String where to store the serial port output */
+  uint16_t devAddress = 0x30;   /* Temperature sensor I2C address */
+  uint8_t tempReg = 0x05u;      /* Temperature register address */
+  uint8_t dataReg[2];           /* Buffer for reading the register content */
+  uint16_t dataRegLong;         /* Variable used to store the whole register content */
+  float tempVal = 0;            /* Float variable used for storing the temperature value */
+  float tempValDec;             /* Float variable used for calculation of the decimal part */
 
   /* USER CODE END 2 */
 
@@ -145,6 +152,31 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	while(1)
 	{
+		  /* Address the temperature register */
+		  	  HAL_I2C_Master_Transmit(&hi2c3, devAddress, &tempReg, 1, 2000u);
+		      /* Read the temperature register content */
+		  	  HAL_I2C_Master_Receive(&hi2c3, devAddress | 0x01, dataReg, 2, 2000u);
+
+		      /* Compose the register content, regardless of the endianess */
+		  	  dataRegLong = ((dataReg[0] << 8u) | dataReg[1]);
+
+		  	  /* Extract the integer part from the fixed point value */
+		  	  tempVal = ((dataRegLong & 0x0FFF) >> 4);
+
+		      /* Extract decimal part */
+		  	  tempValDec = 0.0625;
+		      for (int i=0; i < 4; i++)
+		  	  {
+		  		  tempVal += ((dataRegLong >> i) & 0x0001) * tempValDec;
+		  		  tempValDec *= 2u;
+		  	  }
+
+		      /* Prepare a formatted string, with the temperature value */
+		  	  sprintf(msgstr, "Temperature is %f °C\r\n", tempVal);
+		      /* Transmit the message over UART */
+		  	  HAL_UART_Transmit(&huart1, msgstr, strlen(msgstr), 1000u);
+		      /* Wait one second */
+		  	  HAL_Delay(1000);
     /* USER CODE END WHILE */
     MX_APPE_Process();
 
