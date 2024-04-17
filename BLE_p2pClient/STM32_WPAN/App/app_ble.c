@@ -184,7 +184,7 @@ typedef struct
 #define LED_ON_TIMEOUT            (0.005*1000*1000/CFG_TS_TICK_VAL) /**< 5ms */
 #endif 
 
-#define TRANSMIT_AND_RECEIVE 0
+#define TRANSMIT_AND_RECEIVE 1
 /* USER CODE END PD */
 
 /* Private macros ------------------------------------------------------------*/
