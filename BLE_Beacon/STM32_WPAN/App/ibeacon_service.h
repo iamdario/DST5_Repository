@@ -35,7 +35,30 @@ extern "C"
 /* USER CODE END Includes */
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+typedef enum
+{
+  UUID_0,
+  UUID_1,
+  UUID_2,
+  UUID_3,
+  UUID_4,
+  UUID_5,
+  UUID_6,
+  UUID_7,
+  UUID_8,
+  UUID_9,
+  UUID_10,
+  UUID_11,
+  UUID_12,
+  UUID_13,
+  UUID_14,
+  UUID_15,
+  MAJOR_0, // MSB
+  MAJOR_1, // LSB
+  MINOR_0, // MSB
+  MINOR_1, // LSB
+  TX_POWER,
+} BEACON_INDX_t;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -51,6 +74,8 @@ extern "C"
 /* Exported functions prototypes ---------------------------------------------*/
 /* USER CODE BEGIN EFP */
 void IBeacon_Process(void);
+
+void UpdateBeaconData(BEACON_INDX_t beacon_indx, uint8_t new_data);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
