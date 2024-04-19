@@ -77,6 +77,10 @@ typedef enum
 /* USER CODE BEGIN EFP */
 void IBeacon_Process(void);
 
+void IBeacon_Start(void);
+void IBeacon_Update(void); // Can only be called AFTER IBeacon_Start()
+
+void InitBaseBeaconData(void);
 void UpdateBeaconData(BEACON_INDX_t beacon_indx, uint8_t new_data);
 /* USER CODE END EFP */
 

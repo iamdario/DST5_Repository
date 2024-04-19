@@ -186,7 +186,7 @@ typedef struct
 
 #define BLE_MAC_DONGLE                0xF4, 0x87, 0x27, 0xE1, 0x80, 0x00
 
-#define TRANSMIT_AND_RECEIVE 1
+#define TRANSMIT_AND_RECEIVE 0
 /* USER CODE END PD */
 
 /* Private macros ------------------------------------------------------------*/
@@ -267,6 +267,10 @@ void APP_BLE_Init(void)
   SHCI_CmdStatus_t status;
   tBleStatus ret = BLE_STATUS_INVALID_PARAMS;
   /* USER CODE BEGIN APP_BLE_Init_1 */
+
+  // Initialise the base beacon data
+  InitBaseBeaconData();
+
   /* USER CODE END APP_BLE_Init_1 */
   SHCI_C2_Ble_Init_Cmd_Packet_t ble_init_cmd_packet =
   {
@@ -380,7 +384,8 @@ void APP_BLE_Init(void)
   UTIL_SEQ_RegTask(1<<CFG_TASK_BEACON_UPDATE_REQ_ID, UTIL_SEQ_RFU, Beacon_Update);
 
   // Make Device Discoverable
-  IBeacon_Process();
+  //IBeacon_Process();
+  IBeacon_Start();
 #endif
   /* USER CODE END APP_BLE_Init_3 */
 
@@ -473,17 +478,19 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 	SVCCTL_Init();
 
                 	UTIL_SEQ_RegTask(1<<CFG_TASK_BEACON_UPDATE_REQ_ID, UTIL_SEQ_RFU, Beacon_Update);
-                	IBeacon_Process();
+                	//IBeacon_Process();
 
                 	// Update Beacon Value & Reset Counter
                 	UpdateBeaconData(MAJOR_1, BeaconsReceived);
                 	UpdateBeaconData(MINOR_1, BeaconsReceived/2);
                 	BeaconsReceived = 0;
+
+                	IBeacon_Start();
                 }
                 else
                 {
 #endif
-                	// Enters here once program stops scanning (roughly every 5 seconds)
+                	// Enters here once program stops scanning (roughly every 10 seconds)
                 	UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_0); // Restart Scanning
                 	++ScanCounter;
 #if !TRANSMIT_AND_RECEIVE
@@ -681,6 +688,10 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 					  UpdateBeaconData(UUID_3, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 8)); // Puts UUID_13 of received advertisement into UUID_3
 					  UpdateBeaconData(UUID_4, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 7)); // Puts UUID_14 of received advertisement into UUID_4
 					  UpdateBeaconData(UUID_5, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 6)); // Puts UUID_15 of received advertisement into UUID_5
+
+#if TRANSMIT_AND_RECEIVE
+					  IBeacon_Update();
+#endif
             	  }
 
             	  // Filter based on received power
