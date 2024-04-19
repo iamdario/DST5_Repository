@@ -367,10 +367,6 @@ void APP_BLE_Init(void)
   }
   APP_DBG_MSG("\n");
 #endif
-  /**
-   * Initialize P2P Client Application
-   */
-  //P2PC_APP_Init(); // Commented out as we do not want to run the actual P2PC application
 
   /* USER CODE BEGIN APP_BLE_Init_3 */
 
@@ -378,7 +374,10 @@ void APP_BLE_Init(void)
   UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_0); // Start Scanning
 
 #if TRANSMIT_AND_RECEIVE
+  // Register Beacon Task
   UTIL_SEQ_RegTask(1<<CFG_TASK_BEACON_UPDATE_REQ_ID, UTIL_SEQ_RFU, Beacon_Update);
+
+  // Make Device Discoverable
   IBeacon_Process();
 #endif
   /* USER CODE END APP_BLE_Init_3 */
@@ -394,14 +393,6 @@ void APP_BLE_Init(void)
   UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_0);
 #endif
   /* USER CODE BEGIN APP_BLE_Init_2 */
-
-//  // Register Beacon Task
-//  UTIL_SEQ_RegTask(1<<CFG_TASK_BEACON_UPDATE_REQ_ID, UTIL_SEQ_RFU, Beacon_Update);
-//
-//  UTIL_SEQ_SetTask(1 << CFG_TASK_BEACON_UPDATE_REQ_ID, CFG_SCH_PRIO_0); // Start Beaconing
-//
-//  // Make Device Discoverable
-//  IBeacon_Process();
 
   /* USER CODE END APP_BLE_Init_2 */
 
