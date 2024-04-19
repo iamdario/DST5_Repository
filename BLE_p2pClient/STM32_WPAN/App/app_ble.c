@@ -184,6 +184,8 @@ typedef struct
 #define LED_ON_TIMEOUT            (0.005*1000*1000/CFG_TS_TICK_VAL) /**< 5ms */
 #endif 
 
+#define BLE_MAC_DONGLE                0xF4, 0x87, 0x27, 0xE1, 0x80, 0x00
+
 #define TRANSMIT_AND_RECEIVE 0
 /* USER CODE END PD */
 
@@ -652,13 +654,17 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
               if (event_type == ADV_NONCONN_IND)
               {
-            	  int8_t RSSI = (int8_t)*(uint8_t*) (adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data);
+            	  // Filter based on BLE MAC Address
+            	  uint8_t MAC_Address[] = { BLE_MAC_DONGLE };
 
-            	  // Filter based on received power
-            	  if (RSSI>=-80)
+            	  if (MAC_Address[0] == le_advertising_event->Advertising_Report[0].Address[0] &&
+					  MAC_Address[1] == le_advertising_event->Advertising_Report[0].Address[1] &&
+					  MAC_Address[2] == le_advertising_event->Advertising_Report[0].Address[2] &&
+					  MAC_Address[3] == le_advertising_event->Advertising_Report[0].Address[3] &&
+					  MAC_Address[4] == le_advertising_event->Advertising_Report[0].Address[4] &&
+					  MAC_Address[5] == le_advertising_event->Advertising_Report[0].Address[5])
             	  {
-            		  // Swap LED State
-					  if (BlueLedOn == 0)
+            		  if (BlueLedOn == 0)
 					  {
 						  BSP_LED_On(LED_BLUE);
 						  BlueLedOn = 1;
@@ -668,6 +674,30 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 						  BSP_LED_Off(LED_BLUE);
 						  BlueLedOn = 0;
 					  }
+            	  }
+
+            	  // Filter based on received power
+            	  int8_t RSSI = (int8_t)*(uint8_t*) (adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data);
+            	  if (RSSI>=-80)
+            	  {
+//            		  // Swap LED State
+//					  if (BlueLedOn == 0)
+//					  {
+//						  BSP_LED_On(LED_BLUE);
+//						  BlueLedOn = 1;
+//					  }
+//					  else
+//					  {
+//						  BSP_LED_Off(LED_BLUE);
+//						  BlueLedOn = 0;
+//					  }
+
+//					  UpdateBeaconData(UUID_10, le_advertising_event->Advertising_Report[0].Address[0]);
+//					  UpdateBeaconData(UUID_11, le_advertising_event->Advertising_Report[0].Address[1]);
+//					  UpdateBeaconData(UUID_12, le_advertising_event->Advertising_Report[0].Address[2]);
+//					  UpdateBeaconData(UUID_13, le_advertising_event->Advertising_Report[0].Address[3]);
+//					  UpdateBeaconData(UUID_14, le_advertising_event->Advertising_Report[0].Address[4]);
+//					  UpdateBeaconData(UUID_15, le_advertising_event->Advertising_Report[0].Address[5]);
 
 					  // Increment to indicate we have received another beacon
 					  ++BeaconsReceived;
