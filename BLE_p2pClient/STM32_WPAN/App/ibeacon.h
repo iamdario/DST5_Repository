@@ -47,7 +47,7 @@ extern "C"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-#define ADVERTISING_INTERVAL_IN_MS                                        (1000)
+#define ADVERTISING_INTERVAL_IN_MS                                        (10000)
 #define CALIBRATED_TX_POWER_AT_1_M                             ((uint8_t) (-63))
 #define UUID                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 #define MAJOR_ID                                                            0, 1

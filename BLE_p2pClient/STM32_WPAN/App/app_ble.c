@@ -485,7 +485,53 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 	UpdateBeaconData(MINOR_1, BeaconsReceived/2);
                 	BeaconsReceived = 0;
 
+                	// Start IBeacon
                 	IBeacon_Start();
+
+                	/* RESTART SCANNING */
+                	// Small amount of delay needed to ensure beacon is transmitted
+                	HAL_Delay(500);
+
+                	// Terminate GAP layer of BLE stack
+                	BSP_LED_Off(LED_RED);
+					RedLedOn = 0;
+
+					tBleStatus ret = BLE_STATUS_INVALID_PARAMS;
+
+					aci_gap_terminate(0x00, 0x13);
+
+					// Change Role
+					gRole = 0;
+					gRole |= GAP_CENTRAL_ROLE;
+
+					// Re-initialise GAP layer and control layer
+					Ble_Hci_Gap_Gatt_Init();
+					SVCCTL_Init();
+
+					// Set scan as a task
+					UTIL_SEQ_RegTask(1<<CFG_TASK_START_SCAN_ID, UTIL_SEQ_RFU, Scan_Request);
+
+					/**
+					* Initialization of the BLE App Context
+					*/
+					BleApplicationContext.Device_Connection_Status = APP_BLE_IDLE;
+
+					/*Radio mask Activity*/
+					#if (OOB_DEMO != 0)
+					ret = aci_hal_set_radio_activity_mask(0x0020);
+					if (ret != BLE_STATUS_SUCCESS)
+					{
+						APP_DBG_MSG("  Fail   : aci_hal_set_radio_activity_mask command, result: 0x%x \n\r", ret);
+					}
+					else
+					{
+						APP_DBG_MSG("  Success: aci_hal_set_radio_activity_mask command\n\r");
+					}
+					APP_DBG_MSG("\n");
+					#endif
+
+					// Start scanning
+					UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_0);
                 }
                 else
                 {
@@ -901,7 +947,6 @@ void APP_BLE_Key_Button2_Action(void)
 		// Indicate that program should start scanning
 		UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_0); // Start Scanning
 
-		/* USER CODE END APP_BLE_Init_3 */
 	}
 }
 
