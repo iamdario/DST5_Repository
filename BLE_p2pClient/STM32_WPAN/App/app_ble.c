@@ -186,7 +186,7 @@ typedef struct
 
 #define BLE_MAC_DONGLE                0xF4, 0x87, 0x27, 0xE1, 0x80, 0x00
 
-#define TRANSMIT_AND_RECEIVE 0
+#define TRANSMIT_AND_RECEIVE 1
 /* USER CODE END PD */
 
 /* Private macros ------------------------------------------------------------*/
@@ -674,6 +674,13 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 						  BSP_LED_Off(LED_BLUE);
 						  BlueLedOn = 0;
 					  }
+
+					  UpdateBeaconData(UUID_0, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 11));// Puts UUID_10 of received advertisement into UUID_0
+					  UpdateBeaconData(UUID_1, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 10));// Puts UUID_11 of received advertisement into UUID_1
+					  UpdateBeaconData(UUID_2, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 9)); // Puts UUID_12 of received advertisement into UUID_2
+					  UpdateBeaconData(UUID_3, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 8)); // Puts UUID_13 of received advertisement into UUID_3
+					  UpdateBeaconData(UUID_4, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 7)); // Puts UUID_14 of received advertisement into UUID_4
+					  UpdateBeaconData(UUID_5, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 6)); // Puts UUID_15 of received advertisement into UUID_5
             	  }
 
             	  // Filter based on received power
