@@ -184,7 +184,7 @@ typedef struct
 #define LED_ON_TIMEOUT            (0.005*1000*1000/CFG_TS_TICK_VAL) /**< 5ms */
 #endif 
 
-#define TRANSMIT_AND_RECEIVE 1
+#define TRANSMIT_AND_RECEIVE 0
 /* USER CODE END PD */
 
 /* Private macros ------------------------------------------------------------*/
@@ -455,17 +455,6 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                   UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
                 }
 
-                // Update Beacon Value & Reset Counter
-#if !TRANSMIT_AND_RECEIVE
-                if (ScanCounter == 1)
-                {
-#endif
-                UpdateBeaconVal(BeaconsReceived);
-                BeaconsReceived = 0;
-#if !TRANSMIT_AND_RECEIVE
-                }
-#endif
-
 #if !TRANSMIT_AND_RECEIVE
                 if (ScanCounter == 1)
                 {
@@ -483,6 +472,11 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
                 	UTIL_SEQ_RegTask(1<<CFG_TASK_BEACON_UPDATE_REQ_ID, UTIL_SEQ_RFU, Beacon_Update);
                 	IBeacon_Process();
+
+                	// Update Beacon Value & Reset Counter
+                	UpdateBeaconData(MAJOR_1, BeaconsReceived);
+                	UpdateBeaconData(MINOR_1, BeaconsReceived/2);
+                	BeaconsReceived = 0;
                 }
                 else
                 {

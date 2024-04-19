@@ -45,7 +45,7 @@ typedef struct
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-uint8_t MajorLSB = 0;
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -56,6 +56,8 @@ uint8_t MajorLSB = 0;
 /* Private variables ---------------------------------------------------------*/
 #define ADVERTISING_INTERVAL_INCREMENT (16)
 /* USER CODE BEGIN PV */
+
+uint8_t BeaconData[21];
 
 /* USER CODE END PV */
 
@@ -69,16 +71,29 @@ uint8_t MajorLSB = 0;
 static tBleStatus IBeacon_Init(IBeacon_InitTypeDef *IBeacon_Init)
 {
 /* USER CODE BEGIN IBeacon_Init_1 */
-//	IBeacon_Init->MajorID[0] = 0xFF;
-//	IBeacon_Init->MajorID[1] = 0xFF;
-//	IBeacon_Init->MinorID[0] = 0x00;
-//	IBeacon_Init->MinorID[1] = 0x01;
-//
-//	IBeacon_Init->UuID[14] = 0x00;
-//	IBeacon_Init->UuID[15] = 0xFF;
+	// Store data for future use
+	BeaconData[0] = 	IBeacon_Init->UuID[0];                                                   /*< 16-byte Proximity UUID. */
+	BeaconData[1] =		IBeacon_Init->UuID[1];
+	BeaconData[2] =		IBeacon_Init->UuID[2];
+	BeaconData[3] =		IBeacon_Init->UuID[3];
+	BeaconData[4] =		IBeacon_Init->UuID[4];
+	BeaconData[5] =		IBeacon_Init->UuID[5];
+	BeaconData[6] =		IBeacon_Init->UuID[6];
+	BeaconData[7] =		IBeacon_Init->UuID[7];
+	BeaconData[8] =		IBeacon_Init->UuID[8];
+	BeaconData[9] =		IBeacon_Init->UuID[9];
+	BeaconData[10] =	IBeacon_Init->UuID[10];
+	BeaconData[11] =	IBeacon_Init->UuID[11];
+	BeaconData[12] =	IBeacon_Init->UuID[12];
+	BeaconData[13] =	IBeacon_Init->UuID[13];
+	BeaconData[14] =	IBeacon_Init->UuID[14];
+	BeaconData[15] =	IBeacon_Init->UuID[15];
+	BeaconData[16] =	IBeacon_Init->MajorID[0];                                                /*< 2-byte Major. */
+	BeaconData[17] =	IBeacon_Init->MajorID[1];
+	BeaconData[18] =	IBeacon_Init->MinorID[0];                                                /*< 2-byte Minor. */
+	BeaconData[19] =	IBeacon_Init->MinorID[1];
+	BeaconData[20] =	IBeacon_Init->CalibratedTxPower;
 
-	//IBeacon_Init->MajorID[0] = 0;
-	//IBeacon_Init->MajorID[1] = MajorLSB;
 
 /* USER CODE END IBeacon_Init_1 */
   tBleStatus ret = BLE_STATUS_SUCCESS;
@@ -130,8 +145,7 @@ static tBleStatus IBeacon_Init(IBeacon_InitTypeDef *IBeacon_Init)
     IBeacon_Init->UuID[14],
     IBeacon_Init->UuID[15],
     IBeacon_Init->MajorID[0],                                                /*< 2-byte Major. */
-    //IBeacon_Init->MajorID[1],
-	MajorLSB,
+    IBeacon_Init->MajorID[1],
     IBeacon_Init->MinorID[0],                                                /*< 2-byte Minor. */
     IBeacon_Init->MinorID[1],
     IBeacon_Init->CalibratedTxPower,                                         /*< Ranging data. */
@@ -211,60 +225,53 @@ void IBeacon_Process(void)
 }
 /* USER CODE BEGIN FD */
 
-void UpdateBeaconVal(uint8_t new_value)
+void UpdateBeaconData(BEACON_INDX_t beacon_indx, uint8_t new_data)
 {
-	MajorLSB = new_value;
+	// Update respective data point
+	BeaconData[beacon_indx] = new_data;
 
+	// Create beacon data
 	uint8_t service_data[] =
-	  {
-	    26,                                                                      /*< Length. */
-	    AD_TYPE_MANUFACTURER_SPECIFIC_DATA,                                      /*< Manufacturer Specific Data data type value. */
-	    0x4C, 0x00, 0x02, 0x15,                                                  /*< 32-bit Manufacturer Data. */
-	    0,                                                   /*< 16-byte Proximity UUID. */
-	    1,
-	    2,
-	    3,
-	    4,
-	    5,
-	    6,
-	    7,
-	    8,
-	    9,
-	    10,
-	    11,
-	    12,
-	    13,
-	    14,
-	    15,
-	    0,                                                /*< 2-byte Major. */
-		MajorLSB,
-	    0,                                                /*< 2-byte Minor. */
-	    1,
-	    -63,                                         /*< Ranging data. */
-	  };
+	{
+		26,                                                                      /*< Length. */
+		AD_TYPE_MANUFACTURER_SPECIFIC_DATA,                                      /*< Manufacturer Specific Data data type value. */
+		0x4C, 0x00, 0x02, 0x15,                                                  /*< 32-bit Manufacturer Data. */
+		BeaconData[0],
+		BeaconData[1],
+		BeaconData[2],
+		BeaconData[3],
+		BeaconData[4],
+		BeaconData[5],
+		BeaconData[6],
+		BeaconData[7],
+		BeaconData[8],
+		BeaconData[9],
+		BeaconData[10],
+		BeaconData[11],
+		BeaconData[12],
+		BeaconData[13],
+		BeaconData[14],
+		BeaconData[15],
+		BeaconData[16],
+		BeaconData[17],
+		BeaconData[18],
+		BeaconData[19],
+		BeaconData[20]
+	};
 
-	  uint8_t flags[] =
-	  {
-	    2,                                                                      /*< Length. */
-	    AD_TYPE_FLAGS,                                                          /*< Flags data type value. */
-	    (FLAG_BIT_LE_GENERAL_DISCOVERABLE_MODE | FLAG_BIT_BR_EDR_NOT_SUPPORTED) /*< BLE general discoverable, without BR/EDR support. */
-	  };
+	// Create beacon flags
+	uint8_t flags[] =
+	{
+		2,                                                                      /*< Length. */
+		AD_TYPE_FLAGS,                                                          /*< Flags data type value. */
+		(FLAG_BIT_LE_GENERAL_DISCOVERABLE_MODE | FLAG_BIT_BR_EDR_NOT_SUPPORTED) /*< BLE general discoverable, without BR/EDR support. */
+	};
 
-	  /* Update the service data. */
-	  int ret = aci_gap_update_adv_data(sizeof(service_data), service_data);
+	/* Update the service data. */
+	aci_gap_update_adv_data(sizeof(service_data), service_data);
 
-	  if (ret != BLE_STATUS_SUCCESS)
-	  {
-	    return ret;
-	  }
-
-	  /* Update the adverstising flags. */
-	  ret = aci_gap_update_adv_data(sizeof(flags), flags);
-
-	  if (ret != BLE_STATUS_SUCCESS)
-	  {
-	    return ret;
-	  }
+	/* Update the adverstising flags. */
+	aci_gap_update_adv_data(sizeof(flags), flags);
 }
 
 /* USER CODE END FD */
