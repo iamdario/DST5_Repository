@@ -141,7 +141,6 @@ int main(void)
   char msgstr[64];              /* String where to store the serial port output */
   uint16_t devAddress = 0x30;   /* Temperature sensor I2C address */
   uint8_t tempReg = 0x05u;      /* Temperature register address */
-  uint8_t dataReg[2];           /* Buffer for reading the register content */
   uint16_t dataRegLong;         /* Variable used to store the whole register content */
   float tempVal = 0;            /* Float variable used for storing the temperature value */
   float tempValDec;             /* Float variable used for calculation of the decimal part */
@@ -192,7 +191,7 @@ int main(void)
 		}
 #endif
 		/* Wait one second */
-		HAL_Delay(1000);
+		HAL_Delay(100);
     /* USER CODE END WHILE */
     MX_APPE_Process();
 
@@ -200,6 +199,7 @@ int main(void)
     // Can only update AFTER MX_APPE_Process()
     UpdateBeaconData(MAJOR_0, dataReg[0]); // MSB
     UpdateBeaconData(MAJOR_1, dataReg[1]); // LSB
+    IBeacon_Update();
   }
   /* USER CODE END 3 */
 }

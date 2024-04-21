@@ -137,6 +137,9 @@ void APP_BLE_Init(void)
   SHCI_CmdStatus_t status;
   /* USER CODE BEGIN APP_BLE_Init_1 */
 
+  // Init base data
+  InitBaseBeaconData();
+
   /* USER CODE END APP_BLE_Init_1 */
   SHCI_C2_Ble_Init_Cmd_Packet_t ble_init_cmd_packet =
   {
@@ -242,7 +245,8 @@ void APP_BLE_Init(void)
   else if (CFG_BEACON_TYPE & CFG_IBEACON)
   {
     APP_DBG_MSG("Ibeacon advertise\n\r");
-    IBeacon_Process();
+    //IBeacon_Process();
+    IBeacon_Start();
   }
   /* USER CODE BEGIN APP_BLE_Init_2 */
   BSP_LED_On(LED_BLUE);
