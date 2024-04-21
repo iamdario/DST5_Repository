@@ -53,7 +53,7 @@ enum
 };
 
 /* Exported constants --------------------------------------------------------*/
-#define ADVERTISING_INTERVAL_IN_MS  (1000)
+#define ADVERTISING_INTERVAL_IN_MS  (300)
 #define CALIBRATED_TX_POWER_AT_0_M  ((uint8_t) (-22))
 #define NAMESPACE_ID                'w', 'w', 'w', '.', 's', 't', '.', 'c', 'o', 'm'
 #define BEACON_ID                   0, 0, 0, 0, 0, 1
