@@ -182,13 +182,13 @@ int main(void)
 			/* Read the temperature register content */
 			HAL_I2C_Master_Receive(&hi2c1, (devAddressAcc<<1) | 0x01, accData, sizeof(accData), 2000u);
 
-			int16_t x = (accData[1] << 8) | accData[0];
-			int16_t y = (accData[3] << 8) | accData[2];
-			int16_t z = (accData[5] << 8) | accData[4];
+//			int16_t x = (accData[1] << 8) | accData[0];
+//			int16_t y = (accData[3] << 8) | accData[2];
+//			int16_t z = (accData[5] << 8) | accData[4];
 
-			sprintf(msgstr, "X: %d  Y: %d  Z: %d \n", x, y, z);
-
-			HAL_UART_Transmit(&huart1, msgstr, strlen(msgstr), 1000u);
+//			sprintf(msgstr, "X: %d  Y: %d  Z: %d \n", x, y, z);
+//
+//			HAL_UART_Transmit(&huart1, msgstr, strlen(msgstr), 1000u);
 
 			switch (readIndex)
 			{
@@ -236,7 +236,7 @@ int main(void)
 				UpdateBeaconData(MINOR_0, tempData[0]); // MSB
 				UpdateBeaconData(MINOR_1, tempData[1]); // LSB
 
-				// Update Beacon with newest values
+				// Push new data onto beacon
 				IBeacon_Update();
 
 				break;
