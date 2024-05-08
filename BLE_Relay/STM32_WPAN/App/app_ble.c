@@ -185,6 +185,7 @@ typedef struct
 #endif 
 
 #define BLE_MAC_DONGLE                0xF4, 0x87, 0x27, 0xE1, 0x80, 0x00
+#define BLE_MAC_NUCLEO1               0x78, 0xD0, 0x27, 0xE1, 0x80, 0x00
 
 #define TRANSMIT_AND_RECEIVE 0
 /* USER CODE END PD */
@@ -725,7 +726,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
               if (event_type == ADV_NONCONN_IND)
               {
             	  // Filter based on BLE MAC Address
-            	  uint8_t MAC_Address[] = { BLE_MAC_DONGLE };
+            	  uint8_t MAC_Address[] = { BLE_MAC_NUCLEO1 };
 
             	  if (MAC_Address[0] == le_advertising_event->Advertising_Report[0].Address[0] &&
 					  MAC_Address[1] == le_advertising_event->Advertising_Report[0].Address[1] &&
