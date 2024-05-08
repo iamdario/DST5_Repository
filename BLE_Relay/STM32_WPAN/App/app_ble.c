@@ -238,6 +238,23 @@ uint8_t BeaconsReceived = 0;
 
 uint8_t gRole = 0;
 
+// Store values for beacon transmissions
+uint16_t TempMax = 0;
+uint16_t TempMin = 65535;
+uint16_t TempAverage = 0; // Currently unused
+
+// Set max to min possible value and min to max possible value to ensure they are overwritten
+int16_t AccelMax_X = -32768;
+int16_t AccelMax_Y = -32768;
+int16_t AccelMax_Z = -32768;
+
+int16_t AccelMin_X = 32767;
+int16_t AccelMin_Y = 32767;
+int16_t AccelMin_Z = 32767;
+
+int16_t AccelAverage = 0; // Currently unused
+
+// From Example Code
 static uint8_t sector_type;
 
 /* USER CODE END PV */
@@ -463,7 +480,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 }
 
 #if !TRANSMIT_AND_RECEIVE
-                if (ScanCounter == 1)
+                if (ScanCounter == 2)
                 {
                 	BSP_LED_On(LED_RED);
                 	RedLedOn = 1;
@@ -480,10 +497,10 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 	UTIL_SEQ_RegTask(1<<CFG_TASK_BEACON_UPDATE_REQ_ID, UTIL_SEQ_RFU, Beacon_Update);
                 	//IBeacon_Process();
 
-                	// Update Beacon Value & Reset Counter
-                	UpdateBeaconData(MAJOR_1, BeaconsReceived);
-                	UpdateBeaconData(MINOR_1, BeaconsReceived/2);
-                	BeaconsReceived = 0;
+//                	// Update Beacon Value & Reset Counter
+//                	UpdateBeaconData(MAJOR_1, BeaconsReceived);
+//                	UpdateBeaconData(MINOR_1, BeaconsReceived/2);
+//                	BeaconsReceived = 0;
 
                 	// Start IBeacon
                 	IBeacon_Start();
@@ -728,13 +745,98 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 						  BlueLedOn = 0;
 					  }
 
-					  UpdateBeaconData(UUID_0, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 11));// Puts UUID_10 of received advertisement into UUID_0
-					  UpdateBeaconData(UUID_1, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 10));// Puts UUID_11 of received advertisement into UUID_1
-					  UpdateBeaconData(UUID_2, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 9)); // Puts UUID_12 of received advertisement into UUID_2
-					  UpdateBeaconData(UUID_3, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 8)); // Puts UUID_13 of received advertisement into UUID_3
-					  UpdateBeaconData(UUID_4, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 7)); // Puts UUID_14 of received advertisement into UUID_4
-					  UpdateBeaconData(UUID_5, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 6)); // Puts UUID_15 of received advertisement into UUID_5
+            		  //Convert Beacon Data into Respective Variables
+            		  int16_t AccelR1_X = (((uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 21)) << 8) | (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 20);
+					  int16_t AccelR1_Y = (((uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 19)) << 8) | (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 18);
+					  int16_t AccelR1_Z = (((uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 17)) << 8) | (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 16);
 
+            		  int16_t AccelR2_X = (((uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 15)) << 8) | (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 14);
+					  int16_t AccelR2_Y = (((uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 13)) << 8) | (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 12);
+					  int16_t AccelR2_Z = (((uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 11)) << 8) | (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 10);
+
+            		  int16_t AccelR3_X = (((uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 9)) << 8) | (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 8);
+					  int16_t AccelR3_Y = (((uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 7)) << 8) | (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 6);
+					  int16_t AccelR3_Z = (((uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 5)) << 8) | (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 4);
+
+					  int16_t Accel_X[3] = {AccelR1_X, AccelR2_X, AccelR3_X};
+					  int16_t Accel_Y[3] = {AccelR1_Y, AccelR2_Y, AccelR3_Y};
+					  int16_t Accel_Z[3] = {AccelR1_Z, AccelR2_Z, AccelR3_Z};
+
+					  uint16_t TempR = (((uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 3)) << 8) | (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 2);
+
+					  // Due to time limitations, we will only do simple processing of determining min and max values
+					  for (int i = 0; i < 3; ++i)
+					  {
+						  if (AccelMax_X < Accel_X[i])
+						  {
+							  AccelMax_X = Accel_X[i];
+						  }
+
+						  if (AccelMax_Y < Accel_Y[i])
+						  {
+							  AccelMax_Y = Accel_Y[i];
+						  }
+
+						  if (AccelMax_Z < Accel_Z[i])
+						  {
+							  AccelMax_Z = Accel_Z[i];
+						  }
+
+						  if (AccelMin_X > Accel_X[i])
+						  {
+							  AccelMin_X = Accel_X[i];
+						  }
+
+						  if (AccelMin_Y > Accel_Y[i])
+						  {
+							  AccelMin_Y = Accel_Y[i];
+						  }
+
+						  if (AccelMin_Z > Accel_Z[i])
+						  {
+							  AccelMin_Z = Accel_Z[i];
+						  }
+					  }
+
+					  if(TempMax < TempR)
+					  {
+						  TempMax = TempR;
+					  }
+
+					  if(TempMin > TempR)
+					  {
+						  TempMin = TempR;
+					  }
+					  UpdateBeaconData(UUID_0, (AccelAverage >> 8) & 0xFF);
+					  UpdateBeaconData(UUID_1, (AccelAverage) & 0xFF);
+					  UpdateBeaconData(UUID_2, (AccelMax_X >> 8) & 0xFF);
+					  UpdateBeaconData(UUID_3, (AccelMax_X) & 0xFF);
+					  UpdateBeaconData(UUID_4, (AccelMin_X >> 8) & 0xFF);
+					  UpdateBeaconData(UUID_5, (AccelMin_X) & 0xFF);
+					  UpdateBeaconData(UUID_6, (AccelMax_Y >> 8) & 0xFF);
+					  UpdateBeaconData(UUID_7, (AccelMax_Y) & 0xFF);
+					  UpdateBeaconData(UUID_8, (AccelMin_Y >> 8) & 0xFF);
+					  UpdateBeaconData(UUID_9, (AccelMin_Y) & 0xFF);
+					  UpdateBeaconData(UUID_10, (AccelMax_Z >> 8) & 0xFF);
+					  UpdateBeaconData(UUID_11, (AccelMax_Z) & 0xFF);
+					  UpdateBeaconData(UUID_12, (AccelMin_Z >> 8) & 0xFF);
+					  UpdateBeaconData(UUID_13, (AccelMin_Z) & 0xFF);
+					  UpdateBeaconData(UUID_14, (TempAverage >> 8) & 0xFF);
+					  UpdateBeaconData(UUID_15, (TempAverage) & 0xFF);
+					  UpdateBeaconData(MAJOR_0, (TempMax >> 8) & 0xFF);
+					  UpdateBeaconData(MAJOR_1, (TempMax) & 0xFF);
+					  UpdateBeaconData(MINOR_0, (TempMin >> 8) & 0xFF);
+					  UpdateBeaconData(MINOR_1, (TempMin) & 0xFF);
+
+
+//					  UpdateBeaconData(UUID_0, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 11));// Puts UUID_10 of received advertisement into UUID_0
+//					  UpdateBeaconData(UUID_1, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 10));// Puts UUID_11 of received advertisement into UUID_1
+//					  UpdateBeaconData(UUID_2, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 9)); // Puts UUID_12 of received advertisement into UUID_2
+//					  UpdateBeaconData(UUID_3, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 8)); // Puts UUID_13 of received advertisement into UUID_3
+//					  UpdateBeaconData(UUID_4, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 7)); // Puts UUID_14 of received advertisement into UUID_4
+//					  UpdateBeaconData(UUID_5, (uint8_t)*(adv_report_data + le_advertising_event->Advertising_Report[0].Length_Data - 6)); // Puts UUID_15 of received advertisement into UUID_5
+
+					  // Transmit and Receive will no longer work without updating the beacon at this moment
 #if TRANSMIT_AND_RECEIVE
 					  IBeacon_Update();
 #endif
