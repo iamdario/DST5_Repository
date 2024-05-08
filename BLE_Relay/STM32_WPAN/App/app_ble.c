@@ -869,16 +869,19 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 					  ++BeaconsReceived;
             	  }
 
-            	  if (BlueLedOn == 0)
-				  {
-            		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET); // A9 LED ON
-					  BlueLedOn = 1;
-				  }
-				  else
-				  {
-	            	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET); // A9 LED ON
-					  BlueLedOn = 0;
-				  }
+        		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET); // A9 LED ON
+
+
+//            	  if (BlueLedOn == 0)
+//				  {
+//            		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET); // A9 LED ON
+//					  BlueLedOn = 1;
+//				  }
+//				  else
+//				  {
+//	            	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET); // A9 LED ON
+//					  BlueLedOn = 0;
+//				  }
               }
 
               /* search AD TYPE 0x09 (Complete Local Name) */
