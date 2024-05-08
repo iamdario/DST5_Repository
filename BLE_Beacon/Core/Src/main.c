@@ -185,11 +185,20 @@ int main(void)
 		HAL_UART_Transmit(&huart1, msgstr, strlen(msgstr), 1000u);
 
 #else
-		++dataReg[1];
 		if (dataReg[1] == 0xFF)
 		{
 			dataReg[1] = 0x00;
 		}
+
+		if (dataReg[1] & 0x01)
+		{
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET); // A9 LED ON
+		}
+		else
+		{
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET); // A9 LED ON
+		}
+		++dataReg[1];
 #endif
 		/* Wait one second */
 		HAL_Delay(1000);
@@ -198,8 +207,8 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     // Can only update AFTER MX_APPE_Process()
-    UpdateBeaconData(MAJOR_0, dataReg[0]); // MSB
-    UpdateBeaconData(MAJOR_1, dataReg[1]); // LSB
+    //UpdateBeaconData(MAJOR_0, dataReg[0]); // MSB
+    //UpdateBeaconData(MAJOR_1, dataReg[1]); // LSB
   }
   /* USER CODE END 3 */
 }
@@ -541,6 +550,7 @@ static void MX_DMA_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
 /* USER CODE END MX_GPIO_Init_1 */
 
@@ -548,6 +558,16 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

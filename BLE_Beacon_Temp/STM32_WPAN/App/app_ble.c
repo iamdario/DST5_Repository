@@ -245,8 +245,7 @@ void APP_BLE_Init(void)
   else if (CFG_BEACON_TYPE & CFG_IBEACON)
   {
     APP_DBG_MSG("Ibeacon advertise\n\r");
-    //IBeacon_Process();
-    IBeacon_Start();
+    IBeacon_Process();
   }
   /* USER CODE BEGIN APP_BLE_Init_2 */
   BSP_LED_On(LED_BLUE);

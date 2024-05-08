@@ -312,22 +312,22 @@
 		<link>
 			<name>Application/User/STM32_WPAN/App/eddystone_tlm_service.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/STM32_WPAN/App/eddystone_tlm_service.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/STM32_WPAN/App/eddystone_tlm_service.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/STM32_WPAN/App/eddystone_uid_service.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/STM32_WPAN/App/eddystone_uid_service.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/STM32_WPAN/App/eddystone_uid_service.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/STM32_WPAN/App/eddystone_url_service.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/STM32_WPAN/App/eddystone_url_service.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/STM32_WPAN/App/eddystone_url_service.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/STM32_WPAN/App/ibeacon_service.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/STM32_WPAN/App/ibeacon_service.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/STM32_WPAN/App/ibeacon_service.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/STM32_WPAN/Target/hw_ipcc.c</name>

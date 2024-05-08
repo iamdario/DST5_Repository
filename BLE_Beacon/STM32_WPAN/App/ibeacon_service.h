@@ -1,13 +1,13 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    ibeacon_service.h
+  * @file    App/ibeacon_service.h
   * @author  MCD Application Team
-  * @brief   
+  * @brief
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2019-2021 STMicroelectronics.
+  * Copyright (c) 2024 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -35,30 +35,7 @@ extern "C"
 /* USER CODE END Includes */
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-typedef enum
-{
-  UUID_0,
-  UUID_1,
-  UUID_2,
-  UUID_3,
-  UUID_4,
-  UUID_5,
-  UUID_6,
-  UUID_7,
-  UUID_8,
-  UUID_9,
-  UUID_10,
-  UUID_11,
-  UUID_12,
-  UUID_13,
-  UUID_14,
-  UUID_15,
-  MAJOR_0, // MSB
-  MAJOR_1, // LSB
-  MINOR_0, // MSB
-  MINOR_1, // LSB
-  TX_POWER,
-} BEACON_INDX_t;
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -74,8 +51,6 @@ typedef enum
 /* Exported functions prototypes ---------------------------------------------*/
 /* USER CODE BEGIN EFP */
 void IBeacon_Process(void);
-
-void UpdateBeaconData(BEACON_INDX_t beacon_indx, uint8_t new_data);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

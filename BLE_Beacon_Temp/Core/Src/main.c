@@ -52,7 +52,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define USING_I2C	0
+#define USING_I2C	1
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -61,6 +61,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c3;
 
 IPCC_HandleTypeDef hipcc;
@@ -84,6 +85,7 @@ static void MX_DMA_Init(void);
 static void MX_RTC_Init(void);
 static void MX_IPCC_Init(void);
 static void MX_I2C3_Init(void);
+static void MX_I2C1_Init(void);
 static void MX_RF_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -133,20 +135,32 @@ int main(void)
   MX_DMA_Init();
   MX_RTC_Init();
   MX_I2C3_Init();
+  MX_I2C1_Init();
   MX_RF_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t dataReg[2];           /* Buffer for reading the register content */
+  uint8_t ignoreFirstWhile = 1;
+
+  uint8_t tempData[2];           /* Buffer for reading the register content */
 
 # if USING_I2C
+  uint8_t readIndex = 0;
+
+  // For Temp Sensor
   char msgstr[64];              /* String where to store the serial port output */
   uint16_t devAddress = 0x30;   /* Temperature sensor I2C address */
   uint8_t tempReg = 0x05u;      /* Temperature register address */
+
   uint16_t dataRegLong;         /* Variable used to store the whole register content */
   float tempVal = 0;            /* Float variable used for storing the temperature value */
   float tempValDec;             /* Float variable used for calculation of the decimal part */
+
+  // For Accelerometer
+  uint8_t devAddressAcc = 0x14;
+  uint8_t accRegister = 0x04;
+  uint8_t accData[6];
 #else
-  dataReg[0] = 0x00;
-  dataReg[1] = 0x01;
+  tempData[0] = 0x00;
+  tempData[1] = 0x01;
 #endif
 
   /* USER CODE END 2 */
@@ -156,50 +170,126 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET); // Power for Accelerometer
+
 	while(1)
 	{
+		if (ignoreFirstWhile == 0)
+		{
 #if USING_I2C
-		/* Address the temperature register */
-		HAL_I2C_Master_Transmit(&hi2c3, devAddress, &tempReg, 1, 2000u);
-		/* Read the temperature register content */
-		HAL_I2C_Master_Receive(&hi2c3, devAddress | 0x01, dataReg, 2, 2000u);
+			/* Address the temperature register */
+			HAL_I2C_Master_Transmit(&hi2c1, (devAddressAcc<<1), &accRegister, 1, 2000u);
+			/* Read the temperature register content */
+			HAL_I2C_Master_Receive(&hi2c1, (devAddressAcc<<1) | 0x01, accData, sizeof(accData), 2000u);
 
-		/* Compose the register content, regardless of the endianess */
-		dataRegLong = ((dataReg[0] << 8u) | dataReg[1]);
+			int16_t x = (accData[1] << 8) | accData[0];
+			int16_t y = (accData[3] << 8) | accData[2];
+			int16_t z = (accData[5] << 8) | accData[4];
 
-		/* Extract the integer part from the fixed point value */
-		tempVal = ((dataRegLong & 0x0FFF) >> 4);
+			sprintf(msgstr, "X: %d  Y: %d  Z: %d \n", x, y, z);
 
-		/* Extract decimal part */
-		tempValDec = 0.0625;
-		for (int i=0; i < 4; i++)
-		{
-		  tempVal += ((dataRegLong >> i) & 0x0001) * tempValDec;
-		  tempValDec *= 2u;
-		}
+			HAL_UART_Transmit(&huart1, msgstr, strlen(msgstr), 1000u);
 
-		/* Prepare a formatted string, with the temperature value */
-		sprintf(msgstr, "Temperature is %f °C\r\n", tempVal);
-		/* Transmit the message over UART */
-		HAL_UART_Transmit(&huart1, msgstr, strlen(msgstr), 1000u);
+			switch (readIndex)
+			{
+			case 0:
+				// Increase readIndex
+				++readIndex;
 
+				// Update Beacon Data with Accelerometer Data
+				UpdateBeaconData(UUID_0, accData[1]); // MSB
+				UpdateBeaconData(UUID_1, accData[0]); // LSB
+				UpdateBeaconData(UUID_2, accData[3]); // MSB
+				UpdateBeaconData(UUID_3, accData[2]); // LSB
+				UpdateBeaconData(UUID_4, accData[5]); // MSB
+				UpdateBeaconData(UUID_5, accData[4]); // LSB
+				break;
+			case 1:
+				// Increase readIndex
+				++readIndex;
+
+				// Update Beacon Data with Accelerometer Data
+				UpdateBeaconData(UUID_6, accData[1]); // MSB
+				UpdateBeaconData(UUID_7, accData[0]); // LSB
+				UpdateBeaconData(UUID_8, accData[3]); // MSB
+				UpdateBeaconData(UUID_9, accData[2]); // LSB
+				UpdateBeaconData(UUID_10, accData[5]); // MSB
+				UpdateBeaconData(UUID_11, accData[4]); // LSB
+				break;
+			case 2:
+				// Reset readIndex
+				readIndex = 0;
+
+				// Update Beacon Data with Accelerometer Data
+				UpdateBeaconData(UUID_12, accData[1]); // MSB
+				UpdateBeaconData(UUID_13, accData[0]); // LSB
+				UpdateBeaconData(UUID_14, accData[3]); // MSB
+				UpdateBeaconData(UUID_15, accData[2]); // LSB
+				UpdateBeaconData(MAJOR_0, accData[5]); // MSB
+				UpdateBeaconData(MAJOR_1, accData[4]); // LSB
+
+				/* Address the temperature register */
+				HAL_I2C_Master_Transmit(&hi2c3, devAddress, &tempReg, 1, 2000u);
+				/* Read the temperature register content */
+				HAL_I2C_Master_Receive(&hi2c3, devAddress | 0x01, tempData, 2, 2000u);
+
+				UpdateBeaconData(MINOR_0, tempData[0]); // MSB
+				UpdateBeaconData(MINOR_1, tempData[1]); // LSB
+
+				// Update Beacon with newest values
+				IBeacon_Update();
+
+				break;
+			}
+
+//			/* Address the temperature register */
+//			HAL_I2C_Master_Transmit(&hi2c3, devAddress, &tempReg, 1, 2000u);
+//			/* Read the temperature register content */
+//			HAL_I2C_Master_Receive(&hi2c3, devAddress | 0x01, tempData, 2, 2000u);
+//
+//			UpdateBeaconData(MAJOR_0, tempData[0]); // MSB
+//			UpdateBeaconData(MAJOR_1, tempData[1]); // LSB
+//
+//			// Update Beacon with newest values
+//			IBeacon_Update();
+//
+//			/* Compose the register content, regardless of the endianess */
+//			dataRegLong = ((tempData[0] << 8u) | tempData[1]);
+//
+//			/* Extract the integer part from the fixed point value */
+//			tempVal = ((dataRegLong & 0x0FFF) >> 4);
+//
+//			/* Extract decimal part */
+//			tempValDec = 0.0625;
+//			for (int i=0; i < 4; i++)
+//			{
+//			  tempVal += ((dataRegLong >> i) & 0x0001) * tempValDec;
+//			  tempValDec *= 2u;
+//			}
+//
+//			/* Prepare a formatted string, with the temperature value */
+//			sprintf(msgstr, "Temperature is %f °C\r\n", tempVal);
+//			/* Transmit the message over UART */
+//			HAL_UART_Transmit(&huart1, msgstr, strlen(msgstr), 1000u);
 #else
-		++dataReg[1];
-		if (dataReg[1] == 0xFF)
-		{
-			dataReg[1] = 0x00;
-		}
+			++tempData[1];
+			if (tempData[1] == 0xFF)
+			{
+				tempData[1] = 0x00;
+			}
 #endif
-		/* Wait one second */
-		HAL_Delay(100);
+			/* Wait one second */
+			HAL_Delay(100);
+		}
+
+		// Only ignore 1st while
+		ignoreFirstWhile = 0;
+
     /* USER CODE END WHILE */
     MX_APPE_Process();
 
     /* USER CODE BEGIN 3 */
-    // Can only update AFTER MX_APPE_Process()
-    UpdateBeaconData(MAJOR_0, dataReg[0]); // MSB
-    UpdateBeaconData(MAJOR_1, dataReg[1]); // LSB
-    IBeacon_Update();
+		// Can only update AFTER MX_APPE_Process() !!!
   }
   /* USER CODE END 3 */
 }
@@ -277,6 +367,54 @@ void PeriphCommonClock_Config(void)
   /* USER CODE BEGIN Smps */
 
   /* USER CODE END Smps */
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x00707CBB;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**
@@ -541,13 +679,24 @@ static void MX_DMA_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
